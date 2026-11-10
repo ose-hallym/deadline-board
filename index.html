@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수련교육팀 업무 마감 현황판</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1d5fc4">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root {
+  --bg: #f4f6f9;
+  --panel: #ffffff;
+  --text: #1c2430;
+  --muted: #5d6877;
+  --line: #d9dee6;
+  --accent: #1f5fbf;
+  --accent-soft: #e6eefb;
+  --danger: #b3261e;
+  --danger-soft: #fdeceb;
+  --warn: #8a5a00;
+  --warn-soft: #fff4d6;
+  --ok: #1d6b3a;
+  --ok-soft: #e3f4ea;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+header, main, footer { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+header { padding-top: 20px; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+h1 { font-size: 22px; margin: 0; }
+.today { color: var(--muted); font-size: 14px; }
+section.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-top: 16px; }
+h2 { font-size: 16px; margin: 0 0 12px; }
+form.task-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+form.task-form label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+form.task-form .wide { grid-column: 1 / -1; }
+input, select, textarea, button { font: inherit; }
+input[type=text], input[type=date], select, textarea {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 7px 9px;
+  background: #fff;
+  color: var(--text);
+  width: 100%;
+}
+textarea { resize: vertical; min-height: 56px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.error { color: var(--danger); font-size: 13px; min-height: 18px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+button {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+button:hover { background: #eef1f6; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.primary:hover { background: #184d9b; }
+button.danger { color: var(--danger); border-color: #e3b5b2; }
+button.danger:hover { background: var(--danger-soft); }
+.toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: center; margin-top: 16px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tabs button { display: inline-flex; gap: 6px; align-items: center; border-radius: 999px; }
+.tabs button[aria-selected=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.badge { background: #e8ebf0; color: var(--text); border-radius: 999px; padding: 0 8px; font-size: 12px; min-width: 22px; text-align: center; }
+.tabs button[data-key=overdue] .badge.has { background: var(--danger); color: #fff; }
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-top: 12px; }
+th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 13px; color: var(--muted); background: #f8f9fb; }
+tr.overdue td { background: var(--danger-soft); }
+tr.overdue td:first-child { border-left: 5px solid var(--danger); }
+.name { font-weight: 700; }
+.sub { color: var(--muted); font-size: 13px; white-space: pre-wrap; word-break: break-word; }
+.pill { display: inline-block; border-radius: 999px; padding: 1px 9px; font-size: 12px; font-weight: 700; margin-top: 4px; }
+.pill.overdue { background: var(--danger); color: #fff; }
+.pill.today { background: var(--warn-soft); color: var(--warn); border: 1px solid #ecd28a; }
+.pill.done { background: var(--ok-soft); color: var(--ok); }
+.pill.none { background: #eceff3; color: var(--muted); }
+.memo-label { font-size: 12px; color: var(--muted); }
+.empty { text-align: center; color: var(--muted); padding: 32px 8px; background: var(--panel); border: 1px dashed var(--line); border-radius: 8px; margin-top: 12px; }
+dialog { border: 1px solid var(--line); border-radius: 8px; padding: 16px; width: min(640px, calc(100vw - 24px)); }
+dialog::backdrop { background: rgba(20, 28, 40, 0.45); }
+footer { padding-top: 20px; padding-bottom: 28px; color: var(--muted); font-size: 13px; }
+@media (max-width: 760px) {
+  table, thead, tbody, tr, td { display: block; width: 100%; }
+  thead { position: absolute; left: -9999px; }
+  table { border: 0; background: transparent; }
+  tr { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; padding: 4px 0; }
+  td { border-bottom: 0; padding: 6px 12px; }
+  td::before { content: attr(data-label); display: block; font-size: 12px; color: var(--muted); }
+  tr.overdue { border-left: 5px solid var(--danger); }
+  tr.overdue td, tr.overdue td:first-child { border-left: 0; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>수련교육팀 업무 마감 현황판</h1>
+  <div class="today" id="todayLabel"></div>
+</header>
+<main>
+  <section class="panel" aria-labelledby="addTitle">
+    <h2 id="addTitle">업무 추가</h2>
+    <div id="addFormHost"></div>
+  </section>
+
+  <div class="toolbar">
+    <div class="tabs" role="tablist" aria-label="보기 선택" id="tabs"></div>
+    <button type="button" id="exportBtn">CSV 내보내기</button>
+  </div>
+  <div id="listHost" role="tabpanel" aria-live="polite"></div>
+</main>
+<footer>데이터는 이 기기의 브라우저에만 저장됩니다</footer>
+<dialog id="editDialog" aria-labelledby="editTitle">
+  <h2 id="editTitle">업무 수정</h2>
+  <div id="editFormHost"></div>
+</dialog>
+<script>
+(function () {
+  'use strict';
+
+  var TASKS_KEY = 'training_deadline_board_tasks';
+  var SEEDED_KEY = 'seeded';
+  var STATUSES = ['회신대기', '검토중', '제출완료'];
+  var DONE = '제출완료';
+  var DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+
+  function pad(n) { return n < 10 ? '0' + n : String(n); }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parseYmd(s) {
+    var p = s.split('-');
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  }
+  function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+  function dayDiff(a, b) {
+    var ua = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+    var ub = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.round((ua - ub) / 86400000);
+  }
+  function isValidYmd(s) {
+    if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+    return ymd(parseYmd(s)) === s;
+  }
+
+  function makeContext() {
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var offsetToMonday = (today.getDay() + 6) % 7;
+    var monday = addDays(today, -offsetToMonday);
+    return {
+      today: ymd(today),
+      weekStart: ymd(monday),
+      weekEnd: ymd(addDays(monday, 6)),
+      todayDate: today
+    };
+  }
+
+  function isOpen(t) { return t.status !== DONE; }
+
+  var VIEWS = [
+    { key: 'all', label: '전체', test: function () { return true; } },
+    { key: 'today', label: '오늘 마감', test: function (t, c) { return isOpen(t) && t.due === c.today; } },
+    { key: 'week', label: '이번 주 마감', test: function (t, c) { return isOpen(t) && t.due !== null && t.due >= c.weekStart && t.due <= c.weekEnd; } },
+    { key: 'overdue', label: '기한 지남', test: function (t, c) { return isOpen(t) && t.due !== null && t.due < c.today; } },
+    { key: 'done', label: '완료', test: function (t) { return t.status === DONE; } }
+  ];
+
+  function newId() {
+    try {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    } catch (e) {}
+    return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  }
+
+  function str(v) { return typeof v === 'string' ? v : ''; }
+
+  function sanitize(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    var name = str(raw.name).trim();
+    if (!name) return null;
+    return {
+      id: str(raw.id) || newId(),
+      name: name,
+      owner: str(raw.owner),
+      due: isValidYmd(raw.due) ? raw.due : null,
+      status: STATUSES.indexOf(raw.status) >= 0 ? raw.status : STATUSES[0],
+      basis: str(raw.basis),
+      proof: str(raw.proof),
+      note: str(raw.note)
+    };
+  }
+
+  function loadTasks() {
+    try {
+      var raw = localStorage.getItem(TASKS_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      return arr.map(sanitize).filter(Boolean);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  var storageOk = true;
+  function saveTasks() {
+    try {
+      localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+      storageOk = true;
+    } catch (e) {
+      storageOk = false;
+    }
+  }
+
+  function wasSeeded() {
+    try { return localStorage.getItem(SEEDED_KEY) === '1'; } catch (e) { return true; }
+  }
+  function markSeeded() {
+    try { localStorage.setItem(SEEDED_KEY, '1'); } catch (e) {}
+  }
+
+  function seedTasks() {
+    var c = makeContext();
+    var daysToSunday = dayDiff(parseYmd(c.weekEnd), c.todayDate);
+    var laterThisWeek = ymd(addDays(c.todayDate, Math.min(2, daysToSunday)));
+    function mk(name, owner, due, status, basis, proof, note) {
+      return { id: newId(), name: name, owner: owner, due: due, status: status, basis: basis, proof: proof, note: note };
+    }
+    return [
+      mk('[예시] 수련현황 보고 자료 제출', '담당자A', c.today, '검토중', '[예시] OO 보고 요청 공문', '', '예시 데이터입니다'),
+      mk('[예시] 전공의 근무 실태 회신', '담당자B', laterThisWeek, '회신대기', '[예시] OO 실태 조사 협조 요청 메일', '', '예시 데이터입니다'),
+      mk('[예시] 교육 이수 현황 제출', '담당자A', ymd(addDays(c.todayDate, -3)), '회신대기', '[예시] OO 이수 현황 제출 요청 공문', '', '예시 데이터입니다'),
+      mk('[예시] 수련 계획서 제출', '담당자C', ymd(addDays(c.todayDate, -5)), DONE, '[예시] OO 계획서 제출 안내 공문', '[예시] 접수번호 0000-0000', '예시 데이터입니다'),
+      mk('[예시] 연간 교육 일정 검토', '담당자B', null, '검토중', '[예시] OO 일정 협의 요청 메일', '', '기한이 정해지지 않은 예시입니다')
+    ];
+  }
+
+  var tasks = loadTasks();
+  if (!wasSeeded()) {
+    if (tasks.length === 0) {
+      tasks = seedTasks();
+      saveTasks();
+    }
+    markSeeded();
+  }
+
+  var activeView = 'all';
+
+  function el(tag, props, children) {
+    var node = document.createElement(tag);
+    if (props) {
+      Object.keys(props).forEach(function (k) {
+        if (k === 'text') node.textContent = props[k];
+        else if (k === 'class') node.className = props[k];
+        else if (k === 'on') {
+          Object.keys(props.on).forEach(function (ev) { node.addEventListener(ev, props.on[ev]); });
+        } else if (k in node && k !== 'list') node[k] = props[k];
+        else node.setAttribute(k, props[k]);
+      });
+    }
+    (children || []).forEach(function (ch) {
+      if (ch) node.appendChild(typeof ch === 'string' ? document.createTextNode(ch) : ch);
+    });
+    return node;
+  }
+
+  function sortedTasks(list) {
+    return list.slice().sort(function (a, b) {
+      if (a.due === b.due) return a.name.localeCompare(b.name, 'ko');
+      if (a.due === null) return 1;
+      if (b.due === null) return -1;
+      return a.due < b.due ? -1 : 1;
+    });
+  }
+
+  function buildForm(task, idPrefix, onSubmit, onCancel) {
+    var t = task || { name: '', owner: '', due: null, basis: '', proof: '', note: '' };
+    var errorBox = el('div', { class: 'error', role: 'alert' });
+    var inputs = {
+      name: el('input', { type: 'text', id: idPrefix + 'name', value: t.name, required: true, maxLength: 200 }),
+      owner: el('input', { type: 'text', id: idPrefix + 'owner', value: t.owner, maxLength: 100 }),
+      due: el('input', { type: 'date', id: idPrefix + 'due', value: t.due || '' }),
+      note: el('textarea', { id: idPrefix + 'note', value: t.note, rows: 2 }),
+      basis: el('textarea', { id: idPrefix + 'basis', value: t.basis, rows: 2, placeholder: '예: 공문 제목, 메일 제목' }),
+      proof: el('textarea', { id: idPrefix + 'proof', value: t.proof, rows: 2, placeholder: '예: 제출 일시, 접수번호' })
+    };
+    function field(text, key, wide) {
+      return el('label', { class: wide ? 'wide' : '', for: idPrefix + key }, [text, inputs[key]]);
+    }
+    var submitLabel = task ? '저장' : '추가';
+    var buttons = [el('button', { type: 'submit', class: 'primary', text: submitLabel })];
+    if (onCancel) buttons.push(el('button', { type: 'button', text: '취소', on: { click: onCancel } }));
+    var form = el('form', { class: 'task-form', novalidate: true }, [
+      field('업무명 (필수)', 'name'),
+      field('담당자', 'owner'),
+      field('기한 (비워두면 기한 미정)', 'due'),
+      field('비고', 'note', true),
+      field('원문 근거', 'basis', true),
+      field('완료 증빙', 'proof', true),
+      el('div', { class: 'wide' }, [errorBox]),
+      el('div', { class: 'wide actions' }, buttons)
+    ]);
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var name = inputs.name.value.trim();
+      if (!name) {
+        errorBox.textContent = '업무명을 입력해 주세요.';
+        inputs.name.focus();
+        return;
+      }
+      var dueVal = inputs.due.value;
+      if (dueVal && !isValidYmd(dueVal)) {
+        errorBox.textContent = '기한 형식이 올바르지 않습니다.';
+        inputs.due.focus();
+        return;
+      }
+      errorBox.textContent = '';
+      onSubmit({
+        name: name,
+        owner: inputs.owner.value.trim(),
+        due: dueVal ? dueVal : null,
+        note: inputs.note.value.trim(),
+        basis: inputs.basis.value.trim(),
+        proof: inputs.proof.value.trim()
+      });
+    });
+    return form;
+  }
+
+  function mountAddForm() {
+    var host = document.getElementById('addFormHost');
+    host.textContent = '';
+    host.appendChild(buildForm(null, 'add-', function (data) {
+      tasks.push({
+        id: newId(), name: data.name, owner: data.owner, due: data.due,
+        status: STATUSES[0], basis: data.basis, proof: data.proof, note: data.note
+      });
+      saveTasks();
+      mountAddForm();
+      render();
+    }));
+  }
+
+  var editDialog = document.getElementById('editDialog');
+
+  function openEdit(task) {
+    var host = document.getElementById('editFormHost');
+    host.textContent = '';
+    host.appendChild(buildForm(task, 'edit-', function (data) {
+      task.name = data.name;
+      task.owner = data.owner;
+      task.due = data.due;
+      task.note = data.note;
+      task.basis = data.basis;
+      task.proof = data.proof;
+      saveTasks();
+      closeDialog();
+      render();
+    }, closeDialog));
+    if (typeof editDialog.showModal === 'function') editDialog.showModal();
+    else editDialog.setAttribute('open', '');
+  }
+
+  function closeDialog() {
+    if (typeof editDialog.close === 'function') editDialog.close();
+    else editDialog.removeAttribute('open');
+  }
+
+  function removeTask(task) {
+    if (!confirm('"' + task.name + '" 업무를 삭제할까요? 삭제하면 되돌릴 수 없습니다.')) return;
+    tasks = tasks.filter(function (t) { return t.id !== task.id; });
+    saveTasks();
+    render();
+  }
+
+  function dueCell(task, ctx) {
+    var cell = el('td', { 'data-label': '기한' });
+    if (task.due === null) {
+      cell.appendChild(el('div', { text: '기한 미정' }));
+      return cell;
+    }
+    var d = parseYmd(task.due);
+    cell.appendChild(el('div', { text: task.due + ' (' + DAY_NAMES[d.getDay()] + ')' }));
+    if (isOpen(task)) {
+      var diff = dayDiff(ctx.todayDate, d);
+      if (diff > 0) cell.appendChild(el('span', { class: 'pill overdue', text: '기한 지남 ' + diff + '일' }));
+      else if (diff === 0) cell.appendChild(el('span', { class: 'pill today', text: '오늘 마감' }));
+    } else {
+      cell.appendChild(el('span', { class: 'pill done', text: '제출완료' }));
+    }
+    return cell;
+  }
+
+  function memoBlock(label, value) {
+    if (!value) return null;
+    return el('div', null, [el('span', { class: 'memo-label', text: label + ' ' }), el('span', { class: 'sub', text: value })]);
+  }
+
+  function taskRow(task, ctx) {
+    var overdue = VIEWS.filter(function (v) { return v.key === 'overdue'; })[0].test(task, ctx);
+    var tr = el('tr', { class: overdue ? 'overdue' : '' });
+
+    var nameCell = el('td', { 'data-label': '업무명' }, [el('div', { class: 'name', text: task.name })]);
+    if (task.note) nameCell.appendChild(el('div', { class: 'sub', text: task.note }));
+    tr.appendChild(nameCell);
+
+    tr.appendChild(el('td', { 'data-label': '담당자', text: task.owner || '-' }));
+    tr.appendChild(dueCell(task, ctx));
+
+    var select = el('select', { 'aria-label': task.name + ' 상태' }, STATUSES.map(function (s) {
+      return el('option', { value: s, text: s, selected: s === task.status });
+    }));
+    select.addEventListener('change', function () {
+      task.status = select.value;
+      saveTasks();
+      render();
+    });
+    tr.appendChild(el('td', { 'data-label': '상태' }, [select]));
+
+    var memoCell = el('td', { 'data-label': '근거 · 증빙' }, [
+      memoBlock('근거', task.basis),
+      memoBlock('증빙', task.proof)
+    ]);
+    if (!task.basis && !task.proof) memoCell.appendChild(el('span', { class: 'sub', text: '-' }));
+    tr.appendChild(memoCell);
+
+    tr.appendChild(el('td', { 'data-label': '작업' }, [
+      el('div', { class: 'actions' }, [
+        el('button', { type: 'button', text: '수정', 'aria-label': task.name + ' 수정', on: { click: function () { openEdit(task); } } }),
+        el('button', { type: 'button', class: 'danger', text: '삭제', 'aria-label': task.name + ' 삭제', on: { click: function () { removeTask(task); } } })
+      ])
+    ]));
+    return tr;
+  }
+
+  function renderTabs(ctx) {
+    var host = document.getElementById('tabs');
+    host.textContent = '';
+    VIEWS.forEach(function (view) {
+      var count = tasks.filter(function (t) { return view.test(t, ctx); }).length;
+      var badge = el('span', { class: 'badge' + (count > 0 ? ' has' : ''), text: String(count) });
+      var btn = el('button', {
+        type: 'button', role: 'tab', 'data-key': view.key,
+        'aria-selected': view.key === activeView ? 'true' : 'false'
+      }, [view.label, badge]);
+      btn.addEventListener('click', function () {
+        activeView = view.key;
+        render();
+      });
+      host.appendChild(btn);
+    });
+  }
+
+  function renderList(ctx) {
+    var host = document.getElementById('listHost');
+    host.textContent = '';
+    var view = VIEWS.filter(function (v) { return v.key === activeView; })[0];
+    var list = sortedTasks(tasks.filter(function (t) { return view.test(t, ctx); }));
+    if (!storageOk) {
+      host.appendChild(el('div', { class: 'error', role: 'alert', text: '브라우저 저장소에 저장하지 못했습니다. 이 창을 닫으면 변경 내용이 사라질 수 있으니 CSV로 내보내 주세요.' }));
+    }
+    if (list.length === 0) {
+      host.appendChild(el('div', { class: 'empty', text: tasks.length === 0 ? '등록된 업무가 없습니다. 위에서 업무를 추가해 주세요.' : '이 보기에 해당하는 업무가 없습니다.' }));
+      return;
+    }
+    var head = el('tr', null, ['업무명', '담당자', '기한', '상태', '근거 · 증빙', '작업'].map(function (h) {
+      return el('th', { scope: 'col', text: h });
+    }));
+    var tbody = el('tbody');
+    list.forEach(function (t) { tbody.appendChild(taskRow(t, ctx)); });
+    host.appendChild(el('table', null, [el('thead', null, [head]), tbody]));
+  }
+
+  function render() {
+    var ctx = makeContext();
+    document.getElementById('todayLabel').textContent =
+      '오늘 ' + ctx.today + ' (' + DAY_NAMES[ctx.todayDate.getDay()] + ')';
+    renderTabs(ctx);
+    renderList(ctx);
+  }
+
+  function csvCell(value) {
+    var s = String(value == null ? '' : value);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function buildCsv() {
+    var rows = [['업무명', '담당자', '기한', '상태', '원문 근거', '완료 증빙', '비고']];
+    sortedTasks(tasks).forEach(function (t) {
+      rows.push([t.name, t.owner, t.due === null ? '기한 미정' : t.due, t.status, t.basis, t.proof, t.note]);
+    });
+    return '﻿' + rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n') + '\r\n';
+  }
+
+  function exportCsv() {
+    var blob = new Blob([buildCsv()], { type: 'text/csv;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '업무현황_' + makeContext().today.replace(/-/g, '') + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  document.getElementById('exportBtn').addEventListener('click', exportCsv);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) render();
+  });
+  window.addEventListener('focus', render);
+
+  mountAddForm();
+  render();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').catch(function () {});
+}
+</script>
+</body>
+</html>
